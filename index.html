@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Random Draw - Until 5 Matches</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+        }
+        #container {
+            text-align: center;
+            width: 300px;
+        }
+        .result {
+            font-size: 24px;
+            margin: 10px 0;
+            height: 30px;
+            line-height: 30px;
+        }
+        button, input {
+            font-size: 18px;
+            padding: 10px;
+            margin: 10px 0;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        #candidateList {
+            text-align: left;
+            margin: 10px 0;
+        }
+        .candidate-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 5px 0;
+        }
+        .remove-btn {
+            background-color: transparent;
+            color: #ff4d4d;
+            border: none;
+            padding: 0;
+            font-size: 16px;
+            cursor: pointer;
+            width: 20px;
+            height: 20px;
+            line-height: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .remove-btn:hover {
+            color: #ff0000;
+        }
+        #drawCount {
+            font-size: 18px;
+            margin-top: 20px;
+        }
+        .loading {
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            border: 3px solid rgba(0,0,0,.3);
+            border-radius: 50%;
+            border-top-color: #000;
+            animation: spin 1s ease-in-out infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        #clearAllBtn {
+            background-color: #ff4d4d;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        #clearAllBtn:hover {
+            background-color: #ff0000;
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <input type="text" id="candidateInput" placeholder="Enter candidate name">
+        <button onclick="addCandidate()">Add Candidate</button>
+        <button id="clearAllBtn" onclick="clearAllCandidates()">Clear All Candidates</button>
+        <div id="candidateList"></div>
+        <button onclick="draw()" id="drawBtn">Start Drawing</button>
+        <div id="result1" class="result">-</div>
+        <div id="result2" class="result">-</div>
+        <div id="result3" class="result">-</div>
+        <div id="result4" class="result">-</div>
+        <div id="result5" class="result">-</div>
+        <div id="drawCount"></div>
+    </div>
+
+    <script>
+        let candidates = [];
+
+        function addCandidate() {
+            const input = document.getElementById('candidateInput');
+            const name = input.value.trim();
+            if (name) {
+                candidates.push(name);
+                input.value = '';
+                updateCandidateList();
+            }
+        }
+
+        function removeCandidate(index) {
+            candidates.splice(index, 1);
+            updateCandidateList();
+        }
+
+        function clearAllCandidates() {
+            candidates = [];
+            updateCandidateList();
+        }
+
+        function updateCandidateList() {
+            const list = document.getElementById('candidateList');
+            list.innerHTML = candidates.map((c, index) => `
+                <div class="candidate-item">
+                    <span>${c}</span>
+                    <button class="remove-btn" onclick="removeCandidate(${index})">×</button>
+                </div>
+            `).join('');
+        }
+
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        function getRandomCandidate() {
+            return candidates[Math.floor(Math.random() * candidates.length)];
+        }
+
+        async function draw() {
+            if (candidates.length === 0) {
+                alert("Please add candidates before drawing.");
+                return;
+            }
+
+            const button = document.getElementById('drawBtn');
+            button.disabled = true;
+            
+            const resultElements = [1, 2, 3, 4, 5].map(i => document.getElementById(`result${i}`));
+            const drawCountElement = document.getElementById('drawCount');
+            
+            resultElements.forEach(el => el.innerHTML = '<div class="loading"></div>');
+            drawCountElement.textContent = "Draws: 0";
+
+            try {
+                let drawCount = 0;
+                let targetCandidate = null;
+                let matchCount = 0;
+
+                while (matchCount < 5) {
+                    drawCount++;
+                    const selected = getRandomCandidate();
+                    
+                    if (selected === targetCandidate || targetCandidate === null) {
+                        targetCandidate = selected;
+                        resultElements[matchCount].textContent = selected;
+                        matchCount++;
+                    } else {
+                        matchCount = 1;
+                        targetCandidate = selected;
+                        resultElements.forEach(el => el.textContent = '-');
+                        resultElements[0].textContent = selected;
+                    }
+
+                    drawCountElement.textContent = `Draws: ${drawCount}`;
+                    await sleep(500); // 0.5-second delay between draws
+                }
+            } catch (error) {
+                console.error("Error during draw:", error);
+                resultElements.forEach(el => el.textContent = "Error");
+            } finally {
+                button.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>
