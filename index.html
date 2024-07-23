@@ -13,6 +13,7 @@
             height: 100vh;
             margin: 0;
             background-color: #f0f0f0;
+            transition: background-color 0.5s ease;
         }
         #container {
             text-align: center;
@@ -62,18 +63,6 @@
             font-size: 18px;
             margin-top: 20px;
         }
-        .loading {
-            display: inline-block;
-            width: 30px;
-            height: 30px;
-            border: 3px solid rgba(0,0,0,.3);
-            border-radius: 50%;
-            border-top-color: #000;
-            animation: spin 1s ease-in-out infinite;
-        }
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
         #clearAllBtn {
             background-color: #ff4d4d;
             color: white;
@@ -83,6 +72,20 @@
         #clearAllBtn:hover {
             background-color: #ff0000;
         }
+        .input-group {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 10px 0;
+        }
+        .input-group label {
+            flex: 1;
+            text-align: left;
+        }
+        .input-group input {
+            flex: 2;
+            margin: 0 0 0 10px;
+        }
     </style>
 </head>
 <body>
@@ -91,6 +94,10 @@
         <button onclick="addCandidate()">Add Candidate</button>
         <button id="clearAllBtn" onclick="clearAllCandidates()">Clear All Candidates</button>
         <div id="candidateList"></div>
+        <div class="input-group">
+            <label for="loadingTime">Loading Time (ms):</label>
+            <input type="number" id="loadingTime" value="50" min="0" max="5000">
+        </div>
         <button onclick="draw()" id="drawBtn">Start Drawing</button>
         <div id="result1" class="result">-</div>
         <div id="result2" class="result">-</div>
@@ -133,12 +140,12 @@
             `).join('');
         }
 
-        function sleep(ms) {
-            return new Promise(resolve => setTimeout(resolve, ms));
-        }
-
         function getRandomCandidate() {
             return candidates[Math.floor(Math.random() * candidates.length)];
+        }
+
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
         }
 
         async function draw() {
@@ -152,8 +159,10 @@
             
             const resultElements = [1, 2, 3, 4, 5].map(i => document.getElementById(`result${i}`));
             const drawCountElement = document.getElementById('drawCount');
+            const loadingTimeInput = document.getElementById('loadingTime');
+            const loadingTime = parseInt(loadingTimeInput.value);
             
-            resultElements.forEach(el => el.innerHTML = '<div class="loading"></div>');
+            resultElements.forEach(el => el.textContent = '-');
             drawCountElement.textContent = "Draws: 0";
 
             try {
@@ -177,8 +186,10 @@
                     }
 
                     drawCountElement.textContent = `Draws: ${drawCount}`;
-                    await sleep(500); // 0.5-second delay between draws
+                    await sleep(loadingTime);
                 }
+
+                document.body.style.backgroundColor = '#89CFF0';
             } catch (error) {
                 console.error("Error during draw:", error);
                 resultElements.forEach(el => el.textContent = "Error");
@@ -186,6 +197,14 @@
                 button.disabled = false;
             }
         }
+
+        // Add event listener for Enter key on candidate input
+        document.getElementById('candidateInput').addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                addCandidate();
+            }
+        });
     </script>
 </body>
 </html>
