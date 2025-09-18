@@ -192,7 +192,15 @@
                     await sleep(loadingTime);
                 }
 
-                document.body.style.backgroundColor = '#89CFF0';
+                // ✅ 根據最終結果設定背景顏色
+                if (targetCandidate.toLowerCase() === 'yes') {
+                    document.body.style.backgroundColor = 'lightgreen';
+                } else if (targetCandidate.toLowerCase() === 'no') {
+                    document.body.style.backgroundColor = 'lightcoral';
+                } else {
+                    document.body.style.backgroundColor = '#89CFF0'; // 預設其他顏色
+                }
+
             } catch (error) {
                 console.error("Error during draw:", error);
                 resultElements.forEach(el => el.textContent = "Error");
